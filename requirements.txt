@@ -1,5 +1,5 @@
 python-telegram-bot==20.3
-openai==1.8.0
+openai==0.28.0
 apscheduler==3.10.3
 httpx<1.2.0
 httpcore<0.17.0
