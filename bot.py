@@ -7,19 +7,25 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 import openai
 import config
 
+# OpenAI API açarı
 openai.api_key = config.OPENAI_API_KEY
 
+# Logging
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 
+# Söz və qrammatika listləri
 daily_words_list = ["Salam","Necəsən?","Yaxşıyam","Ev","Məktəb","Kitab","Qələm","Maşın","Dost","Sevgi"]
 grammar_topics = ["Fars dilində feillərin cəm forması","Fars dilində sifətlərin istifadəsi","Fars dilində sual cümlələri"]
 
 daily_tracker = {"words": [], "grammar": ""}
 
+# ---------------- OpenAI sorğusu ----------------
 async def ask_openai(prompt):
-    response = openai.ChatCompletion.create(model="gpt-3.5-turbo",
-                                            messages=[{"role": "user", "content": prompt}])
-    return response['choices'][0]['message']['content']
+    response = openai.chat.completions.create(
+        model="gpt-3.5-turbo",
+        messages=[{"role": "user", "content": prompt}]
+    )
+    return response.choices[0].message.content
 
 # ---------------- SCHEDULED MESSAGES ----------------
 async def send_daily_words(context: ContextTypes.DEFAULT_TYPE):
@@ -49,13 +55,16 @@ async def send_daily_quiz(context: ContextTypes.DEFAULT_TYPE):
         options = [opt.strip() for opt in options_text.split(" ") if opt.strip()]
         if len(options) != 4:
             continue
-        await context.bot.send_poll(
-            chat_id=config.CHAT_ID,
-            question=q_text,
-            options=options,
-            type='quiz',
-            correct_option_id=["A","B","C","D"].index(correct.strip()[0])
-        )
+        try:
+            await context.bot.send_poll(
+                chat_id=config.CHAT_ID,
+                question=q_text,
+                options=options,
+                type='quiz',
+                correct_option_id=["A","B","C","D"].index(correct.strip()[0])
+            )
+        except Exception as e:
+            logging.error(f"Poll göndərilmədi: {e}")
 
 # ---------------- COMMANDS & MENTION ----------------
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -82,6 +91,7 @@ if __name__ == '__main__':
     app.add_handler(CommandHandler("start", start))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_mention))
 
+    # Scheduler
     scheduler = AsyncIOScheduler()
     scheduler.add_job(lambda: app.create_task(send_daily_words(app.bot)), 'cron', hour=10, minute=0)
     scheduler.add_job(lambda: app.create_task(send_grammar_topic(app.bot)), 'cron', hour=14, minute=0)
