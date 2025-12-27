@@ -1,4 +1,2 @@
-import os
-TOKEN = os.getenv("TOKEN")
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-CHAT_ID = os.getenv("CHAT_ID")
+TOKEN = "8482770609:AAFr7vuUm_2nry-fUJElzgj7V_WUJGRSYJc"
+CHAT_ID = "-1003579299647"  # Qrup ID-si
