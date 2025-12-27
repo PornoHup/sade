@@ -21,11 +21,11 @@ daily_tracker = {"words": [], "grammar": ""}
 
 # ---------------- OpenAI sorğusu ----------------
 async def ask_openai(prompt):
-    response = openai.chat.completions.create(
+    response = openai.ChatCompletion.create(
         model="gpt-3.5-turbo",
         messages=[{"role": "user", "content": prompt}]
     )
-    return response.choices[0].message.content
+    return response['choices'][0]['message']['content']
 
 # ---------------- SCHEDULED MESSAGES ----------------
 async def send_daily_words(context: ContextTypes.DEFAULT_TYPE):
@@ -71,7 +71,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("Salam! Mən Az ↔ Fa AI köməkçisiyəm. Mənə mention edin və sual verin.")
 
 async def handle_mention(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if f"@{context.bot.username}" in update.message.text:
+    if update.message and f"@{context.bot.username}" in update.message.text:
         user_text = update.message.text.replace(f"@{context.bot.username}", "").strip()
         if not user_text:
             await update.message.reply_text("Sualınızı yazın, mən cavab verim.")
@@ -93,9 +93,9 @@ if __name__ == '__main__':
 
     # Scheduler
     scheduler = AsyncIOScheduler()
-    scheduler.add_job(lambda: app.create_task(send_daily_words(app.bot)), 'cron', hour=10, minute=0)
-    scheduler.add_job(lambda: app.create_task(send_grammar_topic(app.bot)), 'cron', hour=14, minute=0)
-    scheduler.add_job(lambda: app.create_task(send_daily_quiz(app.bot)), 'cron', hour=19, minute=0)
+    scheduler.add_job(lambda: app.create_task(send_daily_words(app.bot)), 'cron', hour=10, minute=0)   # səhər 10 söz
+    scheduler.add_job(lambda: app.create_task(send_grammar_topic(app.bot)), 'cron', hour=14, minute=0) # günorta qrammatika
+    scheduler.add_job(lambda: app.create_task(send_daily_quiz(app.bot)), 'cron', hour=19, minute=0)    # axşam test
     scheduler.start()
 
     print("Bot işə düşdü 👍")
